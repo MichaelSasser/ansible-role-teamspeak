@@ -1,0 +1,87 @@
+---
+# tasks file for teamspeak
+- name: Apt Update if the last one is more than 3600 seconds ago
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags:
+    - setup-all
+    - setup-teamspeak
+
+- name: Install the package wget
+  apt:
+    name: wget
+  tags:
+    - setup-all
+    - setup-teamspeak
+
+- name: Create the /ts directory
+  file:
+    path: /ts
+    state: directory
+    owner: "9987"
+    group: "9987"
+    mode: "0755"
+  tags:
+    - setup-all
+    - setup-teamspeak
+
+- name: Copy Whitelist
+  copy:
+    src: query_ip_whitelist.txt
+    dest: /ts/query_ip_whitelist.txt
+    owner: "9987"
+    group: "9987"
+    mode: "0644"
+  tags:
+    - setup-all
+    - setup-teamspeak
+
+- name: Copy Config file
+  template:
+    src: ts3server.ini.j2
+    dest: /ts/ts3server.ini
+    owner: "9987"
+    group: "9987"
+    mode: "0644"
+  tags:
+    - setup-all
+    - setup-teamspeak
+
+# - name: remove container
+#   docker_container:
+#     name: teamspeak
+#     state: absent
+#   tags:
+#     - restart-teamspeak
+#     - uninstall-teamspeak
+
+- name: Container present
+  docker_container:
+    name: teamspeak
+    state: started
+    image: teamspeak:latest
+    restart: yes
+    restart_policy: unless-stopped
+    pull: yes
+    volumes:
+      - /ts:/var/ts3server/
+    ports:
+      - 9987:9987/udp
+      - 10011:10011
+      - 10022:10022
+      - 30033:30033
+    # healthcheck:
+    #   test: "cat < /dev/tcp/127.0.0.1/30033"
+    #   interval: 15s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 15s
+    env:
+      TS3SERVER_LICENSE: accept
+      TS3SERVER_QUERY_PROTOCOLS: ssh
+      TS3SERVER_SERVERADMIN_PASSWORD: "{{ teamspeak_serveradmin_password }}"
+  tags:
+    - setup-all
+    - setup-teamspeak
+    - restart-teamspeak
