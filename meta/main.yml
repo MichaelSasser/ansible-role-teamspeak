@@ -12,9 +12,9 @@ galaxy_info:
   # min_ansible_container_version:
   github_branch: https://github.com/MichaelSasser/ansible-role-teamspeak
   platforms:
-    -name: Debian
-    versions:
-      - all
+    - name: Debian
+      versions:
+        - all
 
   galaxy_tags:
     - teamspeak
